@@ -1,0 +1,1 @@
+{"synthetic_test_data": true, "test_note": "SYNTHETIC TEST DATA ONLY — abridged KEV-shaped catalog for lab tests.", "vulnerabilities": [{"cveID": "CVE-2026-90001", "dateAdded": "2026-02-01", "dueDate": "2026-03-01", "product": "Lab Stack", "vendorProject": "Example", "vulnerabilityName": "Example Lab Stack Test Entry"}]}

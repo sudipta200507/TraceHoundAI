@@ -1,0 +1,56 @@
+## 8. AI Security Findings
+
+{% if ctx.findings -%}
+{% for finding in ctx.findings -%}
+### {{ finding.finding_id }} — {{ finding.title }}
+
+**Severity:** {{ finding.severity | capitalize }}
+
+**Confidence:** {{ finding.confidence }}
+
+**Affected asset:** {{ finding.evidence_rows[0].target if finding.evidence_rows else "Not available" }}
+
+**Description:**
+
+{{ finding.description }}
+
+**Evidence:**
+
+{% for row in finding.evidence_rows -%}
+- [`{{ row.id }}`](#11-evidence) — {{ row.type }}/{{ row.source }} on {{ row.target }}: {{ row.observation }}
+{% endfor %}
+
+**Technical reasoning:**
+
+{{ finding.reasoning or "Not available" }}
+
+**Potential impact:**
+
+Findings classified as *{{ finding.classification }}* describe analyst
+judgment over the cited evidence, not confirmed exploitation. Treat the
+exposure as unverified until the manual steps below confirm it.
+
+**Recommended verification:**
+
+{% if finding.next_manual_steps -%}
+{% for step in finding.next_manual_steps -%}
+- {{ step }}
+{% endfor %}
+{% else -%}
+- Not available
+{% endif %}
+
+**Recommendation:**
+
+{% if finding.next_manual_steps -%}
+{% for step in finding.next_manual_steps -%}
+- {{ step }}
+{% endfor %}
+{% else -%}
+- Validate the cited evidence manually before changing configuration.
+{% endif %}
+
+{% endfor %}
+{% else -%}
+No validated findings were produced for this scan.
+{% endif %}

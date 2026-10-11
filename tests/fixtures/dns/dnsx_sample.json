@@ -1,0 +1,1 @@
+[{"a": ["192.0.2.10"], "host": "www.example.lab", "status_code": "NOERROR"}, {"a": ["192.0.2.11"], "host": "api.example.lab", "status_code": "NOERROR"}, {"host": "ghost.example.lab", "status_code": "NXDOMAIN"}]

@@ -1,0 +1,25 @@
+## 9. Attack Path Hypotheses
+
+All attack paths below are **hypotheses** (unverified). They describe
+possible relationships between observed conditions and must be confirmed
+by manual verification. No exploitation was performed.
+
+{% if ctx.attack_paths -%}
+{% for path in ctx.attack_paths -%}
+### {{ path.attack_path_id }} — {{ path.title }}
+
+- Starting asset: {{ path.starting_asset }}
+- Status: {{ path.status | capitalize }}
+- Confidence: {{ path.confidence }}
+- Evidence: {{ path.evidence_ids | join(", ") }}
+
+{% for step in path.steps -%}
+- Asset `{{ step.get("asset", "") }}`: {{ step.get("observed_condition", "") }}
+  Relationship: {{ step.get("relationship", "") or "—" }}.
+  Hypothesis: {{ step.get("hypothesis", "") }}
+  Required manual verification: {{ step.get("required_verification", "") }}
+{% endfor %}
+{% endfor %}
+{% else -%}
+No attack-path hypotheses were produced for this scan.
+{% endif %}

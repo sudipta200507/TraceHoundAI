@@ -1,0 +1,19 @@
+# TraceHoundAI local LLM configuration — Phase 9
+# Local-only Ollama runtime. No cloud APIs, no API keys.
+provider: ollama
+base_url: http://127.0.0.1:11434
+model: qwen3:8b
+options:
+  temperature: 0.2
+  top_p: 0.9
+  num_ctx: 8192
+  # Capped output: structured extraction needs ~2k tokens; larger budgets
+  # only let slow local generations run longer before the timeout trips.
+  num_predict: 2048
+timeouts:
+  health_seconds: 10
+  # Worst-case single-generation budget. Local 8B output is slow — fail fast
+  # and surface the error instead of stalling the scan for 25 minutes.
+  generate_seconds: 600
+context:
+  max_chars: 8000

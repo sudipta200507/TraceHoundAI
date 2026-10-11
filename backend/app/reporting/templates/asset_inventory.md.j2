@@ -1,0 +1,11 @@
+### Asset Inventory
+
+{% if ctx.assets -%}
+| Asset | Status | IP | URLs | Ports | Technologies | Endpoints |
+|-------|--------|----|------|-------|--------------|-----------|
+{% for asset in ctx.assets -%}
+| {{ asset.hostname }} | {{ asset.status }} | {{ asset.ip or "—" }} | {{ asset.urls | join(", ") or "—" }} | {{ asset.ports | join(", ") or "—" }} | {{ asset.technologies | join(", ") or "—" }} | {{ asset.endpoints | join(", ") or "—" }} |
+{% endfor %}
+{% else -%}
+No authorized assets were discovered.
+{% endif %}

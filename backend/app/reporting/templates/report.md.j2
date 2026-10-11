@@ -1,0 +1,429 @@
+# Security Assessment — {{ ctx.metadata.target or "Not available" }}
+
+{% if ctx.synthetic -%}
+> **Note:** This report was generated from synthetic test data for demonstration purposes.
+{% endif %}
+{% if ctx.metadata.scan_id -%}
+Report ID `{{ ctx.metadata.scan_id }}` · Generated {{ ctx.metadata.generated_at or "date not available" }} · Scan duration {{ ctx.metadata.duration or "not recorded" }} · Model {{ ctx.metadata.model }} (local)
+{% endif %}
+
+---
+
+## 1. Executive Summary
+
+{{ ctx.executive_summary or "This automated authorized assessment examined the target across every pipeline stage that ran. It discovered assets, live hosts, ports, technologies and endpoints, then validated the evidence through the local AI model. No exploitation was performed; every statement is backed by tool evidence." }}
+
+### Results at a glance
+
+| Measure | Count |
+|---------|-------|
+| Assets discovered in scope | {{ ctx.summary.get("assets", "Not available") }} |
+| Live hosts (answered) | {{ ctx.summary.get("live_hosts", "Not available") }} |
+| Open ports observed | {{ ctx.summary.get("open_ports", "Not available") }} |
+| Technologies fingerprinted | {{ ctx.summary.get("technologies", "Not available") }} |
+| Endpoints crawled | {{ ctx.summary.get("endpoints", "Not available") }} |
+| Vulnerability observations | {{ ctx.summary.get("vulnerabilities_observed", "Not available") }} |
+| CVEs enriched against NVD/KEV | {{ (ctx.verified_cves | list | length) or 0 }} |
+| Validated findings | {{ ctx.summary.get("ai_findings", "Not available") }} |
+
+### Findings by severity
+
+| Severity | Count |
+|----------|-------|
+| Critical | {{ ctx.findings | selectattr("severity", "equalto", "critical") | list | length }} |
+| High | {{ ctx.findings | selectattr("severity", "equalto", "high") | list | length }} |
+| Medium | {{ ctx.findings | selectattr("severity", "equalto", "medium") | list | length }} |
+| Low | {{ ctx.findings | selectattr("severity", "equalto", "low") | list | length }} |
+| Informational | {{ ctx.findings | selectattr("severity", "equalto", "info") | list | length }} |
+
+### Risk overview (observed facts only)
+
+- Highest finding severity: **{{ ctx.risk_overview.get("highest_severity", "none") | capitalize }}** ({{ ctx.risk_overview.get("finding_count", 0) }} finding(s), {{ ctx.risk_overview.get("hypothesis_count", 0) }} marked hypothesis — hypothesis means an analyst judgment a human must still verify).
+{% if ctx.risk_overview.get("kev_cves") -%}
+- CISA KEV-listed CVEs observed (exploited in the wild): {{ ctx.risk_overview.get("kev_cves") | join(", ") }}
+{% else -%}
+- CISA KEV-listed CVEs observed: none.
+{% endif %}
+{% if ctx.risk_overview.get("nvd_cves") -%}
+- NVD-confirmed CVEs: {{ ctx.risk_overview.get("nvd_cves") | join(", ") }}
+{% else -%}
+- NVD-confirmed CVEs: none.
+{% endif %}
+{% if ctx.risk_overview.get("sensitive_ports") -%}
+- Sensitive services exposed (observed open ports): {% for sp in ctx.risk_overview.get("sensitive_ports") %}{{ sp.port }}/{{ sp.protocol }} ({{ sp.label }}) on {{ sp.host_count }} host(s){{ "; " if not loop.last else "" }}{% endfor %}
+{% else -%}
+- Sensitive services exposed: none observed.
+{% endif %}
+
+---
+
+## 2. Scope of the Assessment
+
+| Item | Value |
+|------|-------|
+| Target root domain | {{ ctx.scope.get("root_domain", ctx.metadata.target) or "Not available" }} |
+| Authorized boundary | {{ ctx.scope.get("root_domain", "") }} plus every subdomain of it |
+| Scan identifier | {{ ctx.metadata.scan_id }} |
+
+Only hosts inside this boundary were tested. Anything outside it was rejected
+and never touched, so the report contains only data you are authorized to see.
+
+---
+
+## 3. How the Scan Was Performed (Methodology)
+
+Each stage ran in a fixed order; later stages never ran before their inputs
+were ready.
+
+{% for stage in ctx.methodology -%}
+- {{ "✅" if stage.ran else "⬜ (did not run)" }} **{{ stage.stage }}**
+{% endfor %}
+
+---
+
+## 4. Assets Discovered (Summary)
+
+{% if ctx.assets -%}
+The scan found **{{ ctx.assets | length }} asset(s)** inside the authorized
+scope. Per-host URL lists, full port rows and full technology rows are in the
+technical appendix and inventory download — this table summarizes each asset.
+
+| # | Asset | IP | Ports | Techs | Endpoints |
+|---|-------|----|-------|-------|-----------|
+{% for asset in ctx.assets -%}
+| {{ loop.index }} | `{{ asset.hostname }}` | {{ asset.ip or "—" }} | {{ asset.ports | length }} | {{ asset.technologies | length }} | {{ asset.endpoints | length }} |
+{% endfor %}
+{% else -%}
+No assets were discovered inside the authorized scope. The tools found
+nothing to enumerate for this target.
+{% endif %}
+
+---
+
+## 5. Open Ports & Services (Grouped)
+
+Identical port/service observations across hosts are grouped: one row per
+distinct port, with the number of hosts exposing it.
+
+{% if ctx.port_groups -%}
+| Port | Protocol | Service | Versions seen | Hosts |
+|------|----------|---------|---------------|-------|
+{% for group in ctx.port_groups -%}
+| {{ group.port }} | {{ group.protocol or "tcp" }} | {{ group.service or "—" }} | {{ group.versions | join(", ") }} | {{ group.host_count }} |
+{% endfor %}
+{% else -%}
+No open ports were discovered on live hosts. If no port scan ran, this stage
+was not authorized for this scan.
+{% endif %}
+
+---
+
+## 6. Technology Stack (Grouped)
+
+Identical technology detections across hosts are grouped instead of repeated
+per host.
+
+{% if ctx.tech_groups -%}
+| Technology | Version | Hosts |
+|------------|---------|-------|
+{% for group in ctx.tech_groups -%}
+| {{ group.name }} | {{ group.version or "—" }} | {{ group.host_count }} |
+{% endfor %}
+{% else -%}
+No technologies were fingerprinted. Nothing ran on HTTP surfaces the tools
+could identify.
+{% endif %}
+
+---
+
+## 7. Endpoints (Security-Relevant Only)
+
+The crawler found **{{ ctx.endpoint_stats.get("total", 0) }} endpoint(s)**.
+Routine pages, scripts, styles and images are summarized below by category;
+only endpoints matching security-relevant patterns (login, admin, config,
+API, backup and similar) are listed here. The complete inventory is in the
+technical appendix and `endpoints.csv` download — no endpoint was discarded.
+
+{% if ctx.endpoint_stats.get("by_category") -%}
+| Category | Endpoints |
+|----------|-----------|
+{% for row in ctx.endpoint_stats.get("by_category") -%}
+| {{ row.category }} | {{ row.count }} |
+{% endfor %}
+{% endif %}
+
+{% if ctx.security_endpoints -%}
+### Security-relevant endpoints ({{ ctx.security_endpoints_total }} found{% if ctx.security_endpoints_truncated %}, first {{ ctx.security_endpoints | length }} shown{% endif %})
+
+| Host | Path | Why listed |
+|------|------|------------|
+{% for ep in ctx.security_endpoints -%}
+| `{{ ep.hostname }}` | `{{ ep.path }}` | matches `{{ ep.reason }}` |
+{% endfor %}
+{% else -%}
+No endpoints matched security-relevant patterns.
+{% endif %}
+
+---
+
+## 8. Vulnerability Observations (Evidence-Backed)
+
+These are ONLY observations actually made by the verification scanner and
+enriched against the public NVD catalog and the CISA Known Exploited (KEV)
+list. An NVD match means the CVE exists in the public catalog; it does NOT by
+itself prove this target is exploitable. KEV listing means CISA reports
+real-world exploitation of that CVE.
+
+{% if ctx.verified_cves -%}
+| CVE | Scanner observed | NVD status | CVSS | CISA KEV | Evidence |
+|-----|------------------|------------|------|----------|----------|
+{% for cve in ctx.verified_cves -%}
+| {{ cve.cve_id }} | {{ "yes" if cve.scanner_observed else "no" }} | {{ cve.nvd_status }} | {{ cve.cvss_score if cve.cvss_score is not none else "Not available" }} | {{ "LISTED — exploited in the wild" if cve.known_exploited else "not listed" }} | {{ cve.evidence_ids | join(", ") }} |
+{% endfor %}
+{% else -%}
+The verification scanner produced no CVE observations in this scan.
+{% endif %}
+
+---
+
+## 9. Validated Security Findings
+
+Every finding below was produced by the local AI model **from the collected
+evidence** and then checked by deterministic validators: each cites tool
+Evidence IDs that prove what was observed, and no finding invents
+vulnerabilities, CVEs, services, or risk claims. A finding marked
+*hypothesis* is an analyst judgment that still needs a human to confirm;
+nothing was exploited.
+
+{% if ctx.findings -%}
+{% for finding in ctx.findings -%}
+### {{ loop.index }}. {{ finding.finding_id }} — {{ finding.title }}
+
+| Property | Value |
+|----------|-------|
+| Severity | **{{ finding.severity | capitalize }}** |
+| Confidence | {{ (finding.confidence * 100) | round(0) | int }}% |
+| Classification | {{ finding.classification }} |
+| Verification status | {{ finding.verification_status }} |
+| Affected asset | {{ finding.evidence_rows[0].target if finding.evidence_rows else "Not available" }} |
+
+**What was observed:** {{ finding.description }}
+
+**Why it matters (AI reasoning):** {{ finding.reasoning or "Not available." }}
+
+{% if finding.observed_facts -%}
+**Supporting facts:**
+
+{% for fact in finding.observed_facts -%}
+- {{ fact }}
+{% endfor %}
+{% endif %}
+
+**Evidence trail:**
+
+{% for row in finding.evidence_rows -%}
+- `{{ row.id }}` — {{ row.type }}/{{ row.source }} on {{ row.target }}: {{ row.observation }}
+{% endfor %}
+
+{% set remedies = ctx.linked_remediation.get(finding.finding_id, []) -%}
+{% if remedies -%}
+**Remediation (linked recommendations sharing this finding's evidence):**
+
+{% for rec in remedies -%}
+- **[{{ rec.priority }}]** {{ rec.text }} (`{{ rec.recommendation_id }}`)
+{% endfor %}
+{% endif %}
+
+{% if finding.next_manual_steps -%}
+**Next steps — what an authorized tester should check manually:**
+
+{% for step in finding.next_manual_steps -%}
+{{ loop.index }}. {{ step }}
+{% endfor %}
+{% endif %}
+
+---
+
+{% endfor %}
+{% else -%}
+No validated findings were produced for this scan. The tools observed the
+target's public surface, but nothing in the evidence rose to the level of a
+security finding.
+{% endif %}
+
+---
+
+## 10. Prioritized Recommendations
+
+Actions are ordered: **Critical** first — do these before anything else.
+
+{% if ctx.recommendations -%}
+{% for rec in ctx.recommendations -%}
+### {{ loop.index }}. [{{ rec.priority }}] {{ rec.recommendation_id }}
+
+{{ rec.text }}
+
+- **Why:** {{ rec.rationale or "Not available." }}
+- **Evidence:** {{ rec.evidence_ids | join(", ") or "manual verification advised" }}
+{% endfor %}
+{% else -%}
+No recommendations were produced for this scan.
+{% endif %}
+
+---
+
+## 11. Attack Path Hypotheses
+
+All attack paths are **hypotheses only** — unverified chains of observed
+conditions that a manual tester could investigate. No exploitation was
+performed.
+
+{% if ctx.attack_paths -%}
+{% for path in ctx.attack_paths -%}
+### {{ path.attack_path_id }} — {{ path.title }}
+
+- Starting asset: `{{ path.starting_asset }}`
+- Status: {{ path.status | capitalize }}
+- Confidence: {{ (path.confidence * 100) | round(0) | int }}%
+- Evidence: {{ path.evidence_ids | join(", ") }}
+
+{% for step in path.steps -%}
+- On `{{ step.get("asset", "") }}`: observed condition — {{ step.get("observed_condition", "") }}. Hypothesis: {{ step.get("hypothesis", "") }}. To verify manually: {{ step.get("required_verification", "") }}
+{% endfor %}
+{% endfor %}
+{% else -%}
+No attack-path hypotheses were produced for this scan.
+{% endif %}
+
+---
+
+## 12. Evidence Index (Cited in This Report)
+
+Only the evidence rows actually cited by findings, recommendations, attack
+paths, or verified CVEs are listed here ({{ ctx.cited_evidence | length }} of
+{{ ctx.evidence_table | length }} rows). The complete index is in the
+technical appendix and inventory download — every ID below traces there.
+
+| Evidence ID | Type | Source tool | Target | Observation |
+|-------------|------|-------------|--------|-------------|
+{% for row in ctx.cited_evidence -%}
+| `{{ row.id }}` | {{ row.type }} | {{ row.source }} | {{ row.target }} | {{ row.observation }} |
+{% endfor %}
+
+---
+
+## 13. Screenshots Captured
+
+{% if ctx.screenshots -%}
+{% for shot in ctx.screenshots -%}
+{% if shot.path -%}
+**{{ shot.hostname }}** ({{ shot.url or "no URL" }}) — {{ shot.status }}:
+
+![Screenshot of {{ shot.hostname }}]({{ shot.path }})
+{% else -%}
+- {{ shot.hostname }} ({{ shot.url or "no URL" }}): {{ shot.status }}
+{% endif %}
+{% endfor %}
+{% else -%}
+No screenshots were captured in this scan.
+{% endif %}
+
+---
+
+## 14. Downloads & Technical Appendix
+
+- **Technical appendix** (`technical_appendix.md`): full asset inventory,
+  full per-host port and technology tables, the complete endpoint list, and
+  the complete evidence index ({{ ctx.inventory_counts.get("evidence_rows", 0) }} rows).
+- **Machine-readable inventory** (`inventory.json`): all of the above as
+  structured data ({{ ctx.inventory_counts.get("assets", 0) }} assets,
+  {{ ctx.inventory_counts.get("endpoints", 0) }} endpoints).
+- **Endpoint list** (`endpoints.csv`): every crawled endpoint with its host
+  and security-relevance flag.
+
+Raw tool output backing every Evidence ID:
+
+{% if ctx.raw_references -%}
+{% for ref in ctx.raw_references -%}
+- `{{ ref }}`
+{% endfor %}
+{% else -%}
+No raw references available.
+{% endif %}
+
+---
+
+## 15. Completeness Notes & Limitations
+
+- Scan identifier: `{{ ctx.metadata.scan_id }}`
+- Analysis model: {{ ctx.metadata.model }} ({{ ctx.metadata.model_runtime }}) — local, on the lab machine
+- Pipeline version: {{ ctx.metadata.pipeline_version }}
+- Report generator: {{ ctx.metadata.model_runtime }}-driven pipeline, deterministic evidence chain
+- Main-report inventory counts — assets: {{ ctx.inventory_counts.get("assets", 0) }}, evidence rows: {{ ctx.inventory_counts.get("evidence_rows", 0) }}, endpoints: {{ ctx.inventory_counts.get("endpoints", 0) }} — match the appendix and downloads exactly; nothing summarized here was discarded.
+- Every statement traces to an evidence row; no finding was invented, and
+  nothing was exploited at any point in this assessment.
+
+---
+
+## 16. Final Assessment — What Was Found and What It Means
+
+**Read this last paragraph if you read nothing else.**
+
+The authorized assessment of **{{ ctx.metadata.target or "the target" }}**
+discovered {{ ctx.summary.get("assets", "Not available") }} asset(s),
+{{ ctx.summary.get("live_hosts", "Not available") }} live host(s),
+{{ ctx.summary.get("open_ports", "Not available") }} open port(s),
+{{ ctx.summary.get("technologies", "Not available") }} detected technology
+stack component(s), and {{ ctx.summary.get("endpoints", "Not available") }}
+endpoint(s).
+
+{% if ctx.findings -%}
+**What was found:**
+
+{% for finding in ctx.findings -%}
+- **{{ finding.finding_id }} — {{ finding.title }}** ({{ finding.severity | capitalize }} severity, {{ (finding.confidence * 100) | round(0) | int }}% confidence): {{ finding.description }}
+{% endfor %}
+
+**What an authorized lab tester could do next (manual verification only,
+nothing automated):**
+
+{% for finding in ctx.findings -%}
+{% if finding.next_manual_steps -%}
+- For {{ finding.finding_id }}: {{ finding.next_manual_steps | join("; ") }}
+{% endif %}
+{% endfor %}
+{% else -%}
+**What was found:** no validated security findings. The tools saw the
+target's public surface but nothing in the evidence met the bar for a
+security finding. That is a real result, not a failure: it means the
+Internet-facing surface examined here shows no obvious weakness in the
+stages that ran.
+{% endif %}
+
+{% if ctx.verified_cves -%}
+**Where real CVEs were observed:** {{ ctx.verified_cves | map(attribute="cve_id") | join(", ") }} — see section 8 for NVD and CISA KEV status of each.
+{% endif %}
+
+{% if ctx.recommendations -%}
+**Recommended next actions, in priority order:**
+
+{% for rec in ctx.recommendations -%}
+{{ loop.index }}. **[{{ rec.priority }}]** {{ rec.text }}
+{% endfor %}
+{% endif %}
+
+**Plain-language glossary:** an *asset* is a discovered hostname. A *port*
+is a numbered door a service listens on (443 = HTTPS, 80 = plain HTTP). A
+*service* is the program answering on that port. A *technology* is software
+detected on the website. An *endpoint* is a page or file address the crawler
+found. An *Evidence ID* like `E014` points to one verified tool observation
+listed in section 12 and the appendix. A *CVE* is a publicly catalogued
+vulnerability — only CVEs confirmed against the NVD catalog appear here, and
+*hypothesis* means an analyst judgment that a human must still verify. At no
+point was any exploit run or any damage caused: this is a read-only,
+observation-based assessment.
+
+---
+
+*End of report. Generated by TraceHoundAI — authorized laboratory
+reconnaissance-to-report platform.*

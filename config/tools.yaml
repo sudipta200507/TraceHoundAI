@@ -1,0 +1,69 @@
+# TraceHoundAI external tool configuration — Phase 1 (tool health foundation only)
+# NOTE: ProjectDiscovery httpx MUST use the absolute path below.
+# NEVER rely on bare `httpx` from PATH (conflicts with Python httpx package).
+tools:
+  - name: subfinder
+    executable: "C:\\Users\\USER\\go\\bin\\subfinder.exe"
+    enabled: true
+    version_command: ["-version"]
+    purpose: "Passive subdomain enumeration (ProjectDiscovery)"
+
+  - name: crtsh
+    executable: "https://crt.sh"
+    enabled: true
+    version_command: []
+    purpose: "Certificate transparency lookup via crt.sh web API (no local binary)"
+
+  - name: dnsx
+    executable: "C:\\Users\\USER\\go\\bin\\dnsx.exe"
+    enabled: true
+    version_command: ["-version"]
+    purpose: "DNS resolution and validation (ProjectDiscovery)"
+
+  - name: httpx
+    executable: "C:\\Users\\USER\\go\\bin\\httpx.exe"
+    enabled: true
+    version_command: ["-version"]
+    purpose: "Live host discovery and HTTP probing (ProjectDiscovery — NOT Python httpx)"
+
+  - name: naabu
+    executable: "C:\\Users\\USER\\go\\bin\\naabu.exe"
+    enabled: true
+    version_command: ["-version"]
+    purpose: "Fast port scanning (ProjectDiscovery)"
+
+  - name: nmap
+    executable: "nmap"
+    enabled: true
+    version_command: ["--version"]
+    purpose: "Service and version scanning"
+
+  - name: whatweb
+    executable: "whatweb"
+    enabled: false
+    version_command: ["--version"]
+    purpose: "Technology fingerprinting (currently unavailable on Windows)"
+
+  - name: katana
+    executable: "C:\\Users\\USER\\go\\bin\\katana.exe"
+    enabled: true
+    version_command: ["-version"]
+    purpose: "Endpoint discovery via crawling (ProjectDiscovery)"
+
+  - name: gowitness
+    executable: "C:\\Users\\USER\\go\\bin\\gowitness.exe"
+    enabled: true
+    version_command: ["version"]
+    purpose: "Screenshot capture for live hosts"
+
+  - name: nuclei
+    executable: "C:\\Users\\USER\\go\\bin\\nuclei.exe"
+    enabled: true
+    version_command: ["-version"]
+    purpose: "Vulnerability verification and enrichment (ProjectDiscovery)"
+
+  - name: ollama
+    executable: "ollama"
+    enabled: true
+    version_command: ["--version"]
+    purpose: "Local LLM runtime (Qwen3 8B)"

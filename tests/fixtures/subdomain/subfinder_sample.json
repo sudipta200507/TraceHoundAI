@@ -1,0 +1,1 @@
+{"output": ["www.example.lab", "API.example.lab ", "*.example.lab", "example.lab.", "mail.example.lab", "evil.com", "example.lab.attacker.com", "not a host!!", "", "api.example.lab"], "target": "example.lab"}

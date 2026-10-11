@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<nmaprun scanner="nmap" version="7.99">
+  <host>
+    <status state="up" reason="echo-reply"/>
+    <address addr="192.0.2.11" addrtype="ipv4"/>
+    <hostnames><hostname name="api.example.lab" type="PTR"/></hostnames>
+    <ports>
+      <port protocol="tcp" portid="22"><state state="open" reason="syn-ack"/><service name="ssh" product="OpenSSH" version="9.0" method="probed" conf="10"/></port>
+      <port protocol="tcp" portid="80"><state state="open" reason="syn-ack"/><service name="http" product="ExampleServer" version="" method="probed" conf="10"/></port>
+      <port protocol="tcp" portid="443"><state state="open" reason="syn-ack"/><service name="https" product="ExampleServer" version="1.2" method="probed" conf="10"><cpe>cpe:/a:example:server:1.2</cpe></service></port>
+    </ports>
+  </host>
+  <host>
+    <status state="up" reason="echo-reply"/>
+    <address addr="192.0.2.10" addrtype="ipv4"/>
+    <hostnames><hostname name="www.example.lab" type="PTR"/></hostnames>
+    <ports>
+      <port protocol="tcp" portid="443"><state state="open" reason="syn-ack"/><service name="https" product="" version="" method="table" conf="3"/></port>
+    </ports>
+  </host>
+</nmaprun>

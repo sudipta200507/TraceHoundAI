@@ -1,0 +1,17 @@
+## 10. Prioritized Recommendations
+
+{% if ctx.recommendations -%}
+{% for rec in ctx.recommendations -%}
+### {{ rec.recommendation_id }} ({{ rec.priority }})
+
+{{ rec.text }}
+
+- Rationale: {{ rec.rationale or "Not available" }}
+- Evidence: {{ rec.evidence_ids | join(", ") or "Not available" }}
+{% if rec.finding_ids -%}
+- Findings: {{ rec.finding_ids | join(", ") }}
+{% endif %}
+{% endfor %}
+{% else -%}
+No recommendations were produced for this scan.
+{% endif %}

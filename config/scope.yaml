@@ -1,0 +1,19 @@
+# TraceHoundAI authorized laboratory scope — Phase 2 (scope & safety gate)
+# Safe documentation values only (RFC 2606 / RFC 5737). Do NOT add real external
+# targets, credentials, API keys, or secrets to this repository.
+scope:
+  allowed_domains:
+    - example.lab
+  allowed_subdomains:
+    - www.example.lab
+    - app.example.lab
+  allowed_ips:
+    - 192.0.2.10
+  allowed_cidrs:
+    - 198.51.100.0/24
+
+policy:
+  dry_run: true
+  require_explicit_authorization: true
+  allow_active_scanning: false
+  allow_exploitation: false

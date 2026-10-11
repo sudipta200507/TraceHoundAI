@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-local caches
+*.log
+
+# Scan artifacts (regenerable — run a scan to reproduce)
+data/raw/
+data/processed/
+data/*.log
+reports/generated/
+/gowitness.jsonl
+
+# Build output
+frontend/dist/
+
+# Tool metadata
+.freebuff/
