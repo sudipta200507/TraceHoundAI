@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TraceHoundAI
 
 Authorized laboratory reconnaissance-to-report platform: enter one root
@@ -62,3 +63,6 @@ npm run build
 - The LLM analyzes evidence only — it cannot run tools, invent evidence,
   or mark findings verified. Deterministic validators enforce this.
 - Only scan targets you are explicitly authorized to assess.
+=======
+# TraceHoundAI
+>>>>>>> bc0e4d5f690dd022ff3ca9ca4c3bc51f03615ad8
