@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # TraceHoundAI
 
 Authorized laboratory reconnaissance-to-report platform: enter one root
